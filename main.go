@@ -9,12 +9,13 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"strings"
 	"syscall"
 )
 
 func handler(w http.ResponseWriter, r *http.Request) {
+	redirectURL := strings.TrimPrefix(r.URL.Path, "/")
 	ip, _, err := net.SplitHostPort(r.RemoteAddr)
-
 	if err != nil {
 		http.Error(w, "Unable to parse IP address", http.StatusInternalServerError)
 		return
@@ -30,7 +31,11 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	fmt.Fprintf(w, "Your IP address is: %s\n", ip)
+	if redirectURL != "" {
+		http.Redirect(w, r, redirectURL, http.StatusFound)
+	} else {
+		fmt.Fprintf(w, "Your IP address is: %s\n", ip)
+	}
 }
 
 func runCmds(commands [][]string) error {
@@ -93,9 +98,9 @@ func main() {
 	}()
 
 	http.HandleFunc("/", handler)
+
 	fmt.Printf("Starting server on :%s\n", *port)
 	if err := http.ListenAndServe(":"+*port, nil); err != nil {
 		fmt.Println("Error starting server:", err)
 	}
-
 }
