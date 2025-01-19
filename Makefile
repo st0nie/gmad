@@ -1,4 +1,4 @@
-TARGET = gmad
+TARGET = mortis
 SRC = main.go
 
 all: $(TARGET)
