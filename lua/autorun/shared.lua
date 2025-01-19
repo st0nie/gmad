@@ -1,6 +1,6 @@
 AddCSLuaFile()
 
-url = "http://idc.wolf109909.top:28080/"
+local url = "http://idc.wolf109909.top:28080/"
 
 if CLIENT then
     local function heartbeat()
