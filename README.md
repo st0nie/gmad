@@ -1,5 +1,8 @@
-# Garry's Mod Anti DDoS
-Prevent DDoS attacks on your Garry's Mod server
+# Malicious Online Rejection Traffic Interception System
+
+> "I am fearless of being DDoSed."
+
+Prevent DDoS attacks on your Garry's Mod server.
 
 ## Motivation
 The reason for writing this is that `gm_protect` does not support frp proxy.
