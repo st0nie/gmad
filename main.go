@@ -14,18 +14,18 @@ import (
 
 func handler(w http.ResponseWriter, r *http.Request) {
 	ip, _, err := net.SplitHostPort(r.RemoteAddr)
-	
+
 	if err != nil {
 		http.Error(w, "Unable to parse IP address", http.StatusInternalServerError)
 		return
 	}
 
-	cmd := exec.Command("ipset", "add", "whitelist", ip, "timeout", "300")
+	cmd := exec.Command("ipset", "add", "gmad-whitelist", ip, "timeout", "300")
 	if err := cmd.Run(); err != nil {
 		if exitError, ok := err.(*exec.ExitError); ok {
 			log.Printf("Command %v failed with exit code %d", cmd, exitError.ExitCode())
 		} else {
-			http.Error(w, "Unable to add IP to whitelist", http.StatusInternalServerError)
+			http.Error(w, "Unable to add IP to gmad-whitelist", http.StatusInternalServerError)
 			return
 		}
 	}
@@ -49,12 +49,12 @@ func runCmds(commands [][]string) error {
 
 func setupIptables(port string) error {
 	commands := [][]string{
-		{"ipset", "create", "whitelist", "hash:ip", "timeout", "300"},
-		{"iptables", "-N", "PROTECTED_PORT"},
-		{"iptables", "-A", "PROTECTED_PORT", "-m", "set", "--match-set", "whitelist", "src", "-j", "ACCEPT"},
-		{"iptables", "-A", "PROTECTED_PORT", "-m", "limit", "--limit", "10/second", "-j", "ACCEPT"},
-		{"iptables", "-A", "PROTECTED_PORT", "-j", "REJECT"},
-		{"iptables", "-I", "INPUT", "-p", "udp", "--dport", port, "-j", "PROTECTED_PORT"},
+		{"ipset", "create", "gmad-whitelist", "hash:ip", "timeout", "300"},
+		{"iptables", "-N", "GMAD_PROTECTED"},
+		{"iptables", "-A", "GMAD_PROTECTED", "-m", "set", "--match-set", "gmad-whitelist", "src", "-j", "ACCEPT"},
+		{"iptables", "-A", "GMAD_PROTECTED", "-m", "limit", "--limit", "10/second", "-j", "ACCEPT"},
+		{"iptables", "-A", "GMAD_PROTECTED", "-j", "REJECT"},
+		{"iptables", "-I", "INPUT", "-p", "udp", "--dport", port, "-j", "GMAD_PROTECTED"},
 	}
 
 	return runCmds(commands)
@@ -62,10 +62,10 @@ func setupIptables(port string) error {
 
 func cleanIptables(port string) error {
 	commands := [][]string{
-		{"iptables", "-D", "INPUT", "-p", "udp", "--dport", port, "-j", "PROTECTED_PORT"},
-		{"iptables", "-F", "PROTECTED_PORT"},
-		{"iptables", "-X", "PROTECTED_PORT"},
-		{"ipset", "destroy", "whitelist"},
+		{"iptables", "-D", "INPUT", "-p", "udp", "--dport", port, "-j", "GMAD_PROTECTED"},
+		{"iptables", "-F", "GMAD_PROTECTED"},
+		{"iptables", "-X", "GMAD_PROTECTED"},
+		{"ipset", "destroy", "gmad-whitelist"},
 	}
 
 	return runCmds(commands)
