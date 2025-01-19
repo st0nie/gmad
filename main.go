@@ -21,10 +21,21 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cmd := exec.Command("ipset", "add", "gmad-whitelist", ip, "timeout", "300")
-	if err := cmd.Run(); err != nil {
+	// Test if IP is already in the set
+	testCmd := exec.Command("ipset", "test", "gmad-whitelist", ip)
+	if err := testCmd.Run(); err == nil {
+		// IP is in the set, delete it first
+		delCmd := exec.Command("ipset", "del", "gmad-whitelist", ip)
+		if err := delCmd.Run(); err != nil {
+			log.Printf("Failed to delete IP from gmad-whitelist: %v", err)
+		}
+	}
+
+	// Add IP to the set
+	addCmd := exec.Command("ipset", "add", "gmad-whitelist", ip, "timeout", "300")
+	if err := addCmd.Run(); err != nil {
 		if exitError, ok := err.(*exec.ExitError); ok {
-			log.Printf("Command %v failed with exit code %d", cmd, exitError.ExitCode())
+			log.Printf("Command %v failed with exit code %d", addCmd, exitError.ExitCode())
 		} else {
 			http.Error(w, "Unable to add IP to gmad-whitelist", http.StatusInternalServerError)
 			return
