@@ -63,14 +63,14 @@ func runCmds(commands [][]string) error {
 	return nil
 }
 
-func setupIptables(port string) error {
+func setupIptables(port, limit, burst string) error {
 	commands := [][]string{
 		{"ipset", "create", "gmad-whitelist", "hash:ip", "timeout", "300"},
 		{"iptables", "-N", "GMAD_PROTECTED"},
 		{"iptables", "-A", "GMAD_PROTECTED", "-m", "set", "--match-set", "gmad-whitelist", "src", "-j", "ACCEPT"},
-		{"iptables", "-A", "GMAD_PROTECTED", "-m", "hashlimit", "--hashlimit", "35/sec", "--hashlimit-burst", "5", "--hashlimit-mode", "srcip", "--hashlimit-name", "main", "-j", "ACCEPT"},
+		{"iptables", "-A", "GMAD_PROTECTED", "-m", "hashlimit", "--hashlimit", limit, "--hashlimit-burst", burst, "--hashlimit-mode", "srcip", "--hashlimit-name", "main", "-j", "ACCEPT"},
 		{"iptables", "-A", "GMAD_PROTECTED", "-j", "DROP"},
-		{"iptables", "-I", "INPUT", "-p", "udp", "--dport", port, "-j", "GMAD_PROTECTED"},
+		{"iptables", "-I", "INPUT", "-p", "udp", "--match", "multiport", "--dports", port, "-j", "GMAD_PROTECTED"},
 	}
 
 	return runCmds(commands)
@@ -90,9 +90,11 @@ func cleanIptables(port string) error {
 func main() {
 	port := flag.String("port", "8080", "Port to listen on")
 	protectedPort := flag.String("protected-port", "9090", "Protected port to listen on")
+	limit := flag.String("limit", "35/sec", "Hashlimit rate")
+	burst := flag.String("burst", "5", "Hashlimit burst")
 	flag.Parse()
 
-	if err := setupIptables(*protectedPort); err != nil {
+	if err := setupIptables(*protectedPort, *limit, *burst); err != nil {
 		log.Fatalf("Failed to setup iptables: %v", err)
 	}
 
