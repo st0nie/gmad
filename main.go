@@ -78,7 +78,7 @@ func setupIptables(port, limit, burst string) error {
 
 func cleanIptables(port string) error {
 	commands := [][]string{
-		{"iptables", "-D", "INPUT", "-p", "udp", "--dport", port, "-j", "GMAD_PROTECTED"},
+		{"iptables", "-D", "INPUT", "-p", "udp", "--match", "multiport", "--dports", port, "-j", "GMAD_PROTECTED"},
 		{"iptables", "-F", "GMAD_PROTECTED"},
 		{"iptables", "-X", "GMAD_PROTECTED"},
 		{"ipset", "destroy", "gmad-whitelist"},
