@@ -68,7 +68,7 @@ func setupIptables(port, limit, burst string) error {
 		{"ipset", "create", "gmad-whitelist", "hash:ip", "timeout", "300"},
 		{"iptables", "-N", "GMAD_PROTECTED"},
 		{"iptables", "-A", "GMAD_PROTECTED", "-m", "set", "--match-set", "gmad-whitelist", "src", "-j", "ACCEPT"},
-		{"iptables", "-A", "GMAD_PROTECTED", "-m", "hashlimit", "--hashlimit", limit, "--hashlimit-burst", burst, "--hashlimit-mode", "srcip", "--hashlimit-name", "main", "-j", "ACCEPT"},
+		{"iptables", "-A", "GMAD_PROTECTED", "-m", "hashlimit", "--hashlimit", limit, "--hashlimit-burst", burst, "--hashlimit-mode", "srcip", "--hashlimit-name", "main", "-j", "RETURN"},
 		{"iptables", "-A", "GMAD_PROTECTED", "-j", "DROP"},
 		{"iptables", "-I", "INPUT", "-p", "udp", "--match", "multiport", "--dports", port, "-j", "GMAD_PROTECTED"},
 	}
