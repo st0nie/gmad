@@ -55,7 +55,7 @@ func setupIptables(port, limit, burst string) error {
 	commands := [][]string{
 		{"ipset", "create", "gmad-whitelist", "hash:ip", "timeout", "300"},
 		{"iptables", "-N", "GMAD_PROTECTED"},
-		{"iptables", "-A", "GMAD_PROTECTED", "-p", "udp", "--match", "multiport", "--sports", "123,53,161", "-j", "DROP"},
+		{"iptables", "-A", "GMAD_PROTECTED", "-p", "udp", "--match", "multiport", "--sports", "123,53,161,3702", "-j", "DROP"},
 		{"iptables", "-A", "GMAD_PROTECTED", "--match", "set", "--match-set", "gmad-whitelist", "src", "-j", "ACCEPT"},
 		{"iptables", "-A", "GMAD_PROTECTED", "--match", "hashlimit", "--hashlimit", limit, "--hashlimit-burst", burst, "--hashlimit-mode", "srcip,dstport", "--hashlimit-name", "main", "-j", "RETURN"},
 		{"iptables", "-A", "GMAD_PROTECTED", "-j", "DROP"},
